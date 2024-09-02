@@ -76,7 +76,8 @@ def Gradient_Descent(params, samples, y, alfa):
         adjusted[i] = params[i]-alfa*(1/len(samples))*c #Update the parameter
     return adjusted
 
-def logistic_regression(x_train, y_train, x_test, y_test, alfa, expected_precision):
+
+def logistic_regression(x_train, y_train, x_test, y_test, alfa):
    # Normalizing the data
     normalized_x_train = normalization(x_train)
     normalized_x_test = normalization(x_test)
@@ -84,10 +85,9 @@ def logistic_regression(x_train, y_train, x_test, y_test, alfa, expected_precisi
     # Initial parameters
     params = np.zeros(x_train.shape[1]) #Set the parameters to an array of zeros 
     previous_error = float('inf') #Set the previous error to infinity
-    model_precision = 0
     epochs = 0
 
-    while model_precision < expected_precision:
+    while True:
         # Update the parameters using gradient descent
         params = Gradient_Descent(params, normalized_x_train, y_train, alfa)
         
@@ -95,8 +95,7 @@ def logistic_regression(x_train, y_train, x_test, y_test, alfa, expected_precisi
         y_pred_prob = [sigmoid(linear(params, sample)) for sample in normalized_x_test]
         y_pred = [1 if prob >= 0.5 else 0 for prob in y_pred_prob]
         
-        # Calculate precision
-        model_precision = precision(y_test, y_pred)
+        
 
         #Calculate the error
         current_error = binary_cross_entropy(y_test, y_pred_prob)
@@ -105,7 +104,6 @@ def logistic_regression(x_train, y_train, x_test, y_test, alfa, expected_precisi
         epochs += 1
         print(f'Epoch: {epochs}')
         print('Parameters:', params)
-        print('Current precision:', model_precision)
         print('Current error:', current_error)
         print('Previous error:', previous_error)
         print('--------------------------------------')
@@ -125,7 +123,8 @@ def logistic_regression(x_train, y_train, x_test, y_test, alfa, expected_precisi
 #To improve the model we'll change metascore to binary labels
 def metascore_to_binary(metascore):
     return 1 if metascore > 50 else 0
-
+    
+# Load the data
 training_data = pd.read_csv('training_dataset.csv', header=0)
 validation_data = pd.read_csv('validation_dataset.csv', header=0)
 
@@ -134,11 +133,11 @@ training_data['Binary_Label'] = training_data['Metascore'].apply(metascore_to_bi
 validation_data['Binary_Label'] = validation_data['Metascore'].apply(metascore_to_binary)
 
 # Extract features and labels
-x_train = validation_data[['Rating', 'Votes', 'Revenue (Millions)']].values.astype(float)
-y_train = validation_data['Binary_Label'].values.astype(int)
+x_train = training_data[['Rating', 'Votes', 'Revenue (Millions)']].values.astype(float)
+y_train = training_data['Binary_Label'].values.astype(int)
 
-x_test = training_data[['Rating', 'Votes', 'Revenue (Millions)']].values.astype(float)
-y_test = training_data['Binary_Label'].values.astype(int)
+x_test = validation_data[['Rating', 'Votes', 'Revenue (Millions)']].values.astype(float)
+y_test = validation_data['Binary_Label'].values.astype(int)
 
-logistic_regression(x_train, y_train, x_test, y_test, 0.5, .70)
-
+# Run logistic regression
+logistic_regression(x_train, y_train, x_test, y_test, 0.01)
